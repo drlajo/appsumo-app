@@ -4,17 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>App Affiliate Ratings</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="styles.css" rel="stylesheet">
     <script src="apps.js" defer></script>
     <script src="script.js" defer></script>
 </head>
 <body class="bg-gray-100">
-    <header class="bg-indigo-600 text-white p-4">
+    <header class="bg-indigo-600 text-white p-4 space-y-2">
         <h1 class="text-xl font-bold">App Affiliate Ratings</h1>
         <p class="text-sm">Vote for your favorite AppSumo deals</p>
+        <div class="flex flex-wrap gap-2">
+            <input id="search-input" type="text" placeholder="Search apps..." class="text-black px-2 py-1 rounded" />
+            <select id="category-filter" class="text-black px-2 py-1 rounded">
+                <option value="all">All Categories</option>
+            </select>
+        </div>
     </header>
 
-    <main class="max-w-3xl mx-auto my-8 p-4">
+    <main class="max-w-5xl mx-auto my-8 p-4">
         <div id="app-list" class="space-y-4"></div>
     </main>
 

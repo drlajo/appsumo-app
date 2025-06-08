@@ -12,23 +12,47 @@ function setVotes(name, value) {
 
 function createAppCard(app) {
   const wrapper = document.createElement('div');
-  wrapper.className = 'bg-white p-4 rounded shadow';
+  wrapper.className = 'bg-white rounded-lg shadow overflow-hidden';
+
+  const img = document.createElement('img');
+  img.className = 'w-full h-40 object-cover';
+  img.src = app.image;
+  img.alt = app.name;
+  wrapper.appendChild(img);
+
+  const content = document.createElement('div');
+  content.className = 'p-4';
+
+  const category = document.createElement('span');
+  category.className = 'text-xs bg-brand-light text-white px-2 py-1 rounded';
+  category.textContent = app.category;
+  content.appendChild(category);
 
   const title = document.createElement('h2');
-  title.className = 'text-lg font-semibold';
+  title.className = 'text-lg font-semibold mt-1';
   title.textContent = app.name;
-  wrapper.appendChild(title);
+  content.appendChild(title);
 
   const desc = document.createElement('p');
   desc.className = 'text-gray-700 mb-2';
   desc.textContent = app.description;
-  wrapper.appendChild(desc);
+  content.appendChild(desc);
+
+  const tags = document.createElement('div');
+  tags.className = 'flex flex-wrap gap-1 mb-2';
+  app.tags.forEach(tag => {
+    const t = document.createElement('span');
+    t.className = 'text-xs bg-gray-200 px-2 py-1 rounded';
+    t.textContent = tag;
+    tags.appendChild(t);
+  });
+  content.appendChild(tags);
 
   const link = document.createElement('a');
   link.href = app.link;
-  link.className = 'text-indigo-600 underline text-sm';
+  link.className = 'text-brand underline text-sm';
   link.textContent = 'View Deal';
-  wrapper.appendChild(link);
+  content.appendChild(link);
 
   const voteWrapper = document.createElement('div');
   voteWrapper.className = 'mt-2 flex items-center space-x-2';
@@ -59,17 +83,48 @@ function createAppCard(app) {
   voteWrapper.appendChild(downBtn);
   voteWrapper.appendChild(voteCount);
 
-  wrapper.appendChild(voteWrapper);
+  content.appendChild(voteWrapper);
+
+  wrapper.appendChild(content);
 
   return wrapper;
 }
 
+function getFilteredApps() {
+  const search = document.getElementById('search-input').value.toLowerCase();
+  const category = document.getElementById('category-filter').value;
+  return apps.filter(app => {
+    const matchesSearch =
+      app.name.toLowerCase().includes(search) ||
+      app.tags.some(t => t.toLowerCase().includes(search));
+    const matchesCategory = category === 'all' || app.category === category;
+    return matchesSearch && matchesCategory;
+  });
+}
+
 function renderApps() {
   const container = document.getElementById('app-list');
-  apps.forEach(app => {
+  container.innerHTML = '';
+  getFilteredApps().forEach(app => {
     const card = createAppCard(app);
     container.appendChild(card);
   });
 }
 
-document.addEventListener('DOMContentLoaded', renderApps);
+function setupFilters() {
+  const categoryFilter = document.getElementById('category-filter');
+  const categories = [...new Set(apps.map(a => a.category))];
+  categories.forEach(cat => {
+    const opt = document.createElement('option');
+    opt.value = cat;
+    opt.textContent = cat;
+    categoryFilter.appendChild(opt);
+  });
+  document.getElementById('search-input').addEventListener('input', renderApps);
+  categoryFilter.addEventListener('change', renderApps);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  setupFilters();
+  renderApps();
+});
