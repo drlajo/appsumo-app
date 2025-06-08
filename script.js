@@ -1,13 +1,30 @@
-// Store votes in localStorage using app name as key
-function getVotes(name) {
-  const votes = JSON.parse(localStorage.getItem('votes') || '{}');
-  return votes[name] || 0;
+let votes = {};
+
+async function loadVotes() {
+  try {
+    const res = await fetch('/votes');
+    const data = await res.json();
+    votes = {};
+    data.forEach(v => { votes[v.app] = v.score; });
+  } catch (err) {
+    console.error('Failed to load votes', err);
+  }
 }
 
-function setVotes(name, value) {
-  const votes = JSON.parse(localStorage.getItem('votes') || '{}');
-  votes[name] = value;
-  localStorage.setItem('votes', JSON.stringify(votes));
+async function sendVote(name, diff) {
+  try {
+    const res = await fetch('/vote', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ app: name, vote: diff })
+    });
+    if (!res.ok) throw new Error('Request failed');
+    const data = await res.json();
+    votes[name] = data.score;
+    return data.score;
+  } catch (err) {
+    console.error('Failed to send vote', err);
+  }
 }
 
 function createAppCard(app) {
@@ -36,24 +53,22 @@ function createAppCard(app) {
   const upBtn = document.createElement('button');
   upBtn.className = 'bg-green-500 text-white px-2 py-1 rounded';
   upBtn.textContent = '+1';
-  upBtn.addEventListener('click', () => {
-    const v = getVotes(app.name) + 1;
-    setVotes(app.name, v);
-    voteCount.textContent = v;
+  upBtn.addEventListener('click', async () => {
+    const score = await sendVote(app.name, 1);
+    if (typeof score === 'number') voteCount.textContent = score;
   });
 
   const downBtn = document.createElement('button');
   downBtn.className = 'bg-red-500 text-white px-2 py-1 rounded';
   downBtn.textContent = '-1';
-  downBtn.addEventListener('click', () => {
-    const v = getVotes(app.name) - 1;
-    setVotes(app.name, v);
-    voteCount.textContent = v;
+  downBtn.addEventListener('click', async () => {
+    const score = await sendVote(app.name, -1);
+    if (typeof score === 'number') voteCount.textContent = score;
   });
 
   const voteCount = document.createElement('span');
   voteCount.className = 'font-bold';
-  voteCount.textContent = getVotes(app.name);
+  voteCount.textContent = votes[app.name] || 0;
 
   voteWrapper.appendChild(upBtn);
   voteWrapper.appendChild(downBtn);
@@ -64,8 +79,9 @@ function createAppCard(app) {
   return wrapper;
 }
 
-function renderApps() {
+async function renderApps() {
   const container = document.getElementById('app-list');
+  await loadVotes();
   apps.forEach(app => {
     const card = createAppCard(app);
     container.appendChild(card);
