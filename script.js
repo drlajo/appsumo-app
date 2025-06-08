@@ -1,13 +1,35 @@
 let votes = {};
+const STORAGE_KEY = 'votes';
+
+function loadLocalVotes() {
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
+  } catch {
+    return {};
+  }
+}
+
+function saveLocalVote(name, value) {
+  const all = loadLocalVotes();
+  all[name] = value;
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
+}
 
 async function loadVotes() {
   try {
     const res = await fetch('/votes');
     const data = await res.json();
     votes = {};
-    data.forEach(v => { votes[v.app] = v.score; });
+    const local = loadLocalVotes();
+    data.forEach(v => {
+      const score = Math.max(v.score, 0);
+      votes[v.app] = score;
+      local[v.app] = score;
+    });
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(local));
   } catch (err) {
     console.error('Failed to load votes', err);
+    votes = loadLocalVotes();
   }
 }
 
@@ -55,15 +77,32 @@ function createAppCard(app) {
   upBtn.textContent = '+1';
   upBtn.addEventListener('click', async () => {
     const score = await sendVote(app.name, 1);
-    if (typeof score === 'number') voteCount.textContent = score;
+    if (typeof score === 'number') {
+      const newScore = Math.max(score, 0);
+      votes[app.name] = newScore;
+      saveLocalVote(app.name, newScore);
+      voteCount.textContent = newScore;
+    }
   });
 
   const downBtn = document.createElement('button');
   downBtn.className = 'bg-red-500 text-white px-2 py-1 rounded';
   downBtn.textContent = '-1';
   downBtn.addEventListener('click', async () => {
+    const current = votes[app.name] || 0;
+    if (current <= 0) {
+      votes[app.name] = 0;
+      saveLocalVote(app.name, 0);
+      voteCount.textContent = 0;
+      return;
+    }
     const score = await sendVote(app.name, -1);
-    if (typeof score === 'number') voteCount.textContent = score;
+    if (typeof score === 'number') {
+      const newScore = Math.max(score, 0);
+      votes[app.name] = newScore;
+      saveLocalVote(app.name, newScore);
+      voteCount.textContent = newScore;
+    }
   });
 
   const voteCount = document.createElement('span');
