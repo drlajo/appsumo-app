@@ -1,0 +1,17 @@
+{
+  "name": "appsumo-app",
+  "version": "1.0.0",
+  "description": "This repository contains a simple demo website built with HTML, JavaScript and Tailwind CSS. It lets visitors upvote or downvote applications. Data can be replaced with real AppSumo listings.",
+  "main": "apps.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "express": "^5.1.0",
+    "mongoose": "^8.15.1"
+  }
+}
